@@ -1,9 +1,16 @@
 <?php
+date_default_timezone_set('Asia/Kolkata');
 require_once './includes/connection.php';
 require_once './includes/authentication.php';
 if($_SESSION['userType'] == "lecturer" || $_SESSION['userType'] == "principal" || $_SESSION['userType'] == 'hod'){
     header("Location: dashboard.php");
 }
+
+$date  = date("H:i:s");;
+
+$query = "SELECT * FROM `timings` WHERE CAST('$date' AS time) BETWEEN `time_from` AND `time_to`";
+$result = $conn->query($query);
+$currentLecture = $result->fetch_array();
 ?>
 
     <!DOCTYPE html>
@@ -77,8 +84,26 @@ include("./loader.php");
                                             <div class="card-body py-4">
                                                 <h1 class="text-center">
 										<?php
-    										$lectures = (object)(json_decode($studentData['attendance']));
-    										echo "AP-1";
+											$semester = $studentData['semester'];
+											$rollNumber = $studentData['roll_no'];
+											$day = date('l');
+											$query = "SELECT sec FROM departments WHERE initials='" . $studentData['department'] . "'";
+											$sections = explode(",", $conn->query($query)->fetch_array()[0]);
+											if(intval(substr($rollNumber, -2)) <= 50 && intval(substr($rollNumber, -2)) >= 1) {
+												$section = $sections[0];
+											} else {
+												$section = $sections[1];
+											}
+											
+											$lecture = $currentLecture['lecture'];
+											if($lecture == 0) {
+												echo '-';
+											} else {
+												$query = "SELECT * FROM ".$studentData['department']."_classes WHERE lecture=$lecture AND semester=$semester AND section='$section' AND day='".strtolower($day)."'";
+												$result = $conn->query($query);
+												$room = $result->fetch_array()['classroom'];
+												echo strtoupper(substr($room, 0, 1)) . substr($room, 1);
+											}
     										?>
     									</h1>
                                             </div>
@@ -94,7 +119,20 @@ include("./loader.php");
                                             <div class="card-body py-4">
                                                 <h1 class="text-center">
 										<?php
-    										echo "HKS";
+											if($lecture == 0) {
+												echo '-';
+											} else {
+												$query = "SELECT lecture_".$lecture." FROM ".$studentData['department']."_timetable WHERE section='$section' AND day='".strtolower($day)."' AND semester='$semester'";
+												$result = $conn->query($query);
+												$data = $result->fetch_array();
+												$lectureData = explode(":", $data[0]);
+												$subjectCode = $lectureData[0];
+												$teacherCode = $lectureData[1];
+												$query = "SELECT * FROM teacher_list WHERE teacher_code='".$teacherCode."'";
+												$result = $conn->query($query);
+												$teacher = $result->fetch_array()['initials'];
+												echo $teacher;
+											}
     										?>
     									</h1>
                                             </div>
@@ -110,7 +148,14 @@ include("./loader.php");
                                             <div class="card-body py-4">
                                                 <h1 class="text-center">
 										<?php
-    										echo "OOPS";
+    										if($lecture == 0) {
+												echo "Break";
+											} else {
+												$query = "SELECT * FROM subjects WHERE subject_code='".$subjectCode."'";
+												$result = $conn->query($query);
+												$subject = $result->fetch_array()['subject_initials'];
+												echo $subject;
+											}
     										?>
     									</h1>
                                             </div>
@@ -132,62 +177,46 @@ include("./loader.php");
                                                 <thead class="text-primary">
                                                     <tr>
                                                         <th>Lecture</th>
-                                                        <th>Class</th>
+                                                        <th>Class Room</th>
                                                         <th>Teacher</th>
                                                         <th>Subject</th>
                                                     </tr>
                                                 </thead>
                                                 <?php
-                                                    $practicalSubjects = array();
-                                                    $theorySubjects = array();
-            										$query = "SELECT sec FROM departments WHERE initials='" . $studentData['department'] . "'";
-            										$sections = explode(",", $conn->query($query)->fetch_array()[0]);
-            										if(intval(substr($studentData['roll_no'], -2)) <= 50 && intval(substr($studentData['roll_no'], -2)) >= 1) {
-            											$section = $sections[0];
-            										} else {
-            											$section = $sections[1];
-            										}
-            										$query = "SELECT * FROM subjects WHERE department='" . $studentData['department'] . "' AND semester='" . $studentData['semester'] . "' ORDER BY lecture_type, subject_name";
-            										$result = $conn->query($query);
-            										$subjects = array();
-            										while($row = $result->fetch_array(MYSQLI_ASSOC)) {
-            											array_push($subjects, $row);
-            										}
-            										$attendance = (object)json_decode($studentData['attendance']);
-            										$lectures = array();
-                                                    $counter = 0;
-            										foreach($subjects as $key => $subject) {
-            											if($subject['lecture_type'] == "Practical") {
-            												$totalLectures = (object)(json_decode($subject['total_lectures']));
-            												$totalLectures = isset($totalLectures->{$section}) ? $totalLectures->{$section} : 0;
-            												if($totalLectures == 0) {
-            													$percentage = 0;
-            												} else {
-            													$percentage = round(intval($attendance->{$subject['subject_code']}) / intval($totalLectures) * 100);
-            												}
-            												if(isset($attendance->{$subject['subject_code']})) {
-            													echo "<tr>
-            													<td>" . $subject['subject_initials'] . "</td>
-            													<td>" . $totalLectures . "</td>
-            													<td>" . $attendance->{$subject['subject_code']} . "</td>
-            													<td>" . $percentage . "%</td>
-            													</tr>";
-                                                                $practicalSubjects[$counter]['attendedLectures'] = $attendance->{$subject['subject_code']};
-            												} else {
-            													echo "<tr>
-            													<td>" . $subject['subject_initials'] . "</td>
-            													<td>" . $totalLectures . "</td>
-            													<td>0</td>
-            													<td>0%</td>
-            													</tr>";
-                                                                $practicalSubjects[$counter]['attendedLectures'] = 0;
-            												}
-                                                            $practicalSubjects[$counter]['subject'] = $subject['subject_initials'];
-                                                            $practicalSubjects[$counter]['totalLectures'] = $totalLectures;
-                                                            $counter++;
-            											}
-            										}
-            										?>
+												$query = "SELECT * FROM ".$studentData['department']."_classes WHERE semester=$semester AND section='$section' AND day='".strtolower($day)."'";
+												$result = $conn->query($query);
+												$classroomData = array();
+												while($row = $result->fetch_array()) {
+													array_push($classroomData, strtoupper(substr($row['classroom'], 0, 1)) . substr($row['classroom'], 1));
+												}
+
+												// print_r($classroomData);
+
+												
+												for($i = 1; $i <= 8; $i++) {
+													echo "<tr><td>$i</td><td>".$classroomData[$i - 1]."</td>";
+
+
+													$query = "SELECT lecture_".$i." FROM ".$studentData['department']."_timetable WHERE section='$section' AND day='".strtolower($day)."' AND semester='$semester'";
+													$result = $conn->query($query);
+													$data = $result->fetch_array();
+													$lectureData = explode(":", $data[0]);
+													$subjectCode = $lectureData[0];
+													$teacherCode = $lectureData[1];
+													$query = "SELECT * FROM teacher_list WHERE teacher_code='".$teacherCode."'";
+													$result = $conn->query($query);
+													$teacher = $result->fetch_array();
+													echo "<td>".$teacher['name']." (".$teacher['initials'].")</td>";
+
+													$query = "SELECT * FROM subjects WHERE subject_code='".$subjectCode."'";
+													$result = $conn->query($query);
+													$subject = $result->fetch_array()['subject_initials'];
+													echo "<td>$subject</td>";
+
+													echo "</tr>";
+												}
+                                                    
+            									?>
                                               </table>
                                         </div>
                                     </div>

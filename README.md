@@ -207,7 +207,7 @@ To install this project in your machine just follow few steps
 ### Clone the repository in you machine
 ### Put the folder inside the root folder of your sever
 ### Extract the folder 
-### Export the database using mysql(You don't need to create a database)
+### Import the database using mysql(You don't need to create a database)
 ### Now head toward the project and login using passwords
    - Username : Hardeep581    Password : hardeep    (For HoD Access)
    - Username : Sanjeev344    Password : sanjeev    (For Lecturer Access)

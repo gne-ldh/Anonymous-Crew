@@ -25,7 +25,9 @@ There are a lot of problems which are supposed to be eliminated like calculating
    2.2. User class and Characteristics<br/>
    2.3. Operating Environment<br/>
    2.4. Design and Implementations Constraints
-3. **_System Features_**
+3. **_System Features_**<br />
+   3.1. Key Featurs<br />
+   3.2. Upcoming Features<br />
 4. **_System Requirements_**<br/>
    4.1. **External Interface Requirements**<br/>
    4.1.1. User Interface<br/>
@@ -143,7 +145,12 @@ A distributed Online Student Record Management and Performance Evaluation stores
 - Power of atorney can be set to different faculty members
 - View attendance of Students in single click
 
- 
+#### **3.2 Features to be added**
+- Report generation for attendance
+- Online assignment submission by students
+- Chat between students and teachers
+- Role Management - to grant and revoke permissions to authorities
+- Few bugs and issues to be fixed
 
 ### **4. System Requirements**
 

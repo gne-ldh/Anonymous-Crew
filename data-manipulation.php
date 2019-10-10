@@ -484,7 +484,7 @@ if(isset($_POST['addTeacher'])){
     $teacherInitial = $_POST['teacherInitials'];
     $teacherUsername = $_POST['teacherUsername'];
     $teacherPassword = $_POST['teacherPassword'];
-    $teacherDesignation = $_POST['teacherDesignation'];
+    $teacherDesignation = strtolower("$_POST['teacherDesignation']");
     $teacherDepartment = $_POST['teacherDepartment'];
     $query= "INSERT INTO teacher_list VALUES('','$teacherCode','$teacherName','$teacherInitial','$teacherUsername','$teacherPassword','$teacherDesignation','$teacherDepartment')";
     $ins= mysqli_query($conn,$query);
